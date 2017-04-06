@@ -1,6 +1,5 @@
 import cv2
 import glob
-import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
@@ -9,16 +8,8 @@ import pickle
 # %matplotlib inline
 
 
-image = mpimg.imread('./camera_cal/calibration12.jpg')
-
-# plt.figure(figsize=(15, 4))
-# plt.subplot(121)
-# plt.axis('off')
-# plt.title('Original')
-# plt.imshow(image)
-
-
 class ImageSample():
+
     def __init__(self, filename):
         self.filename = filename
         self.image = self.read_image(self.filename)
@@ -26,6 +17,16 @@ class ImageSample():
 
     def read_image(self, filename):
         return cv2.imread(filename)
+
+
+class Calibrator():
+
+    def __init__(self, calibration):
+        self.ret = calibration[0]
+        self.mtx = calibration[1]
+        self.dist = calibration[2]
+        self.rvecs = calibration[3]
+        self.tvecs = calibration[4]
 
 
 def get_calibration_points(images_regex, num_channels, x, y, z=0):
@@ -64,15 +65,6 @@ def get_calibration_points(images_regex, num_channels, x, y, z=0):
             # cv2.waitKey(500)
 
     return objpoints, imgpoints
-
-
-class Calibrator():
-    def __init__(self, calibration):
-        self.ret = calibration[0]
-        self.mtx = calibration[1]
-        self.dist = calibration[2]
-        self.rvecs = calibration[3]
-        self.tvecs = calibration[4]
 
 
 def calibrate_camera(objpoints, imgpoints, img_size, output_file):
