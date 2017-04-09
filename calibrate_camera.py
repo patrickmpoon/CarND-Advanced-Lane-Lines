@@ -51,6 +51,12 @@ def undistort_image(image, matrix, distortion_coefficients):
     return cv2.undistort(image, matrix, distortion_coefficients, None, matrix)
 
 
+def get_calibration_data():
+    # Read in the saved camera matrix and distortion coefficients
+    # These are the arrays you calculated using cv2.calibrateCamera()
+    return pickle.load( open( "./output_images/calibration.p", "rb" ) )
+
+
 if __name__ == '__main__':
     img_files_regex = './camera_cal/calibration*.jpg'
     pts_per_row = 9
