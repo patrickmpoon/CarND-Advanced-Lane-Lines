@@ -15,7 +15,7 @@ def draw_image_corners(image, pts_per_row, pts_per_column, corners, ret):
 
 
 def get_calibration_pts(img_files_regex, pts_per_row, pts_per_column, num_channels):
-    # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
+    # Prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
     objp = np.zeros((pts_per_column * pts_per_row, 3), np.float32)
     objp[:,:2] = np.mgrid[0:pts_per_row, 0:pts_per_column].T.reshape(-1, 2)
 
