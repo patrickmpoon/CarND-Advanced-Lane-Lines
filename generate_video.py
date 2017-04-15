@@ -136,47 +136,57 @@ def pipeline(image):
     # Draw the lane onto the warped blank image
     cv2.fillPoly(color_warp, np.int_([pts]), (255, 255, 0))
 
+    avg_curve_radius = np.mean([left_curverad + right_curverad])
+    text_curve_radius = 'Curvature Radius = {:.4f} (m)'.format(avg_curve_radius)
+
+    lane_center = (leftx_current + rightx_current) / 2
+    lane_off_center = (lane_center - (image.shape[1] / 2)) * xm_per_pix
+    text_center_off = 'Vehicle is {:.4f} m {} of center'.format(abs(lane_off_center), 'left' if lane_off_center > 0 else 'right')
+
     # Drop shadow
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    fontscale = 1.25
+    thickness = 2
     cv2.putText(
         undistorted,
-        'Curvature Radius = 651 (m)',
+        text_curve_radius,
         (53, 103),
-        0,
-        2,
+        font,
+        fontscale,
         (0, 0, 0),
-        5,
+        thickness,
         cv2.LINE_AA
     )
     cv2.putText(
         undistorted,
-        'Curvature Radius = 651 (m)',
+        text_curve_radius,
         (50, 100),
-        0,
-        2,
+        font,
+        fontscale,
         (255, 255, 0),
-        5,
+        thickness,
         cv2.LINE_AA
     )
 
     # Primary color
     cv2.putText(
         undistorted,
-        'Vehicle is {}m {} of center'.format(0.5, 'left'),
+        text_center_off,
         (53, 163),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        2,
+        font,
+        fontscale,
         (0, 0, 0),
-        5,
+        thickness,
         cv2.LINE_AA
     )
     cv2.putText(
         undistorted,
-        'Vehicle is {}m {} of center'.format(0.5, 'left'),
+        text_center_off,
         (50, 160),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        2,
+        font,
+        fontscale,
         (255, 255, 0),
-        5,
+        thickness,
         cv2.LINE_AA
     )
 
