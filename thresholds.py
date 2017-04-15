@@ -78,10 +78,11 @@ def get_direction_threshold(img, sobel_kernel=3, thresh=(0, np.pi / 2)):
 
 def get_color_threshold(img, s_thresh=(170, 255), sx_thresh=(20, 100)):
     img = np.copy(img)
-    # Convert to HLS color space and separate the V channel
+    # Convert to HLS color space and separate the L channel
     hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS).astype(np.float)
     l_channel = hls[:, :, 1]
     s_channel = hls[:, :, 2]
+
     # Sobel x
     sobelx = cv2.Sobel(l_channel, cv2.CV_64F, 1, 0)  # Take the derivative in x
     abs_sobelx = np.absolute(sobelx)  # Absolute x derivative to accentuate lines away from horizontal
@@ -104,60 +105,3 @@ def get_color_threshold(img, s_thresh=(170, 255), sx_thresh=(20, 100)):
     combined_binary[(s_binary == 1) | (sxbinary == 1)] = 1
 
     return color_binary, combined_binary
-
-
-def test_sobel_thresh(min=0, max=0, orient='x'):
-    threshed = get_abs_sobel_thresh(img, orient, min, max)
-    print('min: {}  max: {}'.format(min, max))
-    #     plt.imshow(threshed, cmap='gray', interpolation='nearest', aspect='auto')
-    # Plot the result
-    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(24, 9))
-    f.tight_layout()
-    ax1.imshow(img)
-    ax1.set_title('Original Image', fontsize=50)
-    ax2.imshow(threshed, cmap='gray')
-    ax2.set_title('Thresholded Gradient [Sobel]', fontsize=50)
-    plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
-
-
-def set_orient(p):
-    global a, b, o
-    o = p
-    test_sobel_thresh(a, b, o)
-
-
-def set_min(n):
-    global a, b, o
-    a = n
-    test_sobel_thresh(a, b, o)
-
-
-def set_max(x):
-    global a, b, o
-    b = x
-    test_sobel_thresh(a, b, o)
-
-
-img = cv2.cvtColor(cv2.imread('./test_images/signs_vehicles_xygrad.png'), cv2.COLOR_BGR2RGB)
-
-
-if __name__ == '__main__':
-    # Test Sobel threshold
-    # a = None
-    # b = None
-    # o = 'x'
-    #
-    # interact(set_orient, p='x')
-    # interact(set_min, n=(0, 255))
-    # interact(set_max, x=(0, 255))
-
-    # Test Magnitude Threshold
-    mag_binary = get_magnitude_threshold(img, sobel_kernel=3, mag_thresh=(30, 100))
-    # Plot the result
-    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(24, 9))
-    f.tight_layout()
-    ax1.imshow(img)
-    ax1.set_title('Original Image', fontsize=50)
-    ax2.imshow(mag_binary, cmap='gray')
-    ax2.set_title('Thresholded Magnitude', fontsize=50)
-    plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
