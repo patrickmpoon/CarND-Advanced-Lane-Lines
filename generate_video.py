@@ -9,6 +9,7 @@ calibration = get_calibration_data()
 matrix = calibration['mtx']
 distortion_coefficients = calibration['dist']
 
+frames = []
 
 def process_window(
     binary_warped,
@@ -137,7 +138,7 @@ def pipeline(image):
 
 
     # Set the width of the windows +/- margin
-    margin = 100
+    margin = 155
 
     # Set minimum number of pixels found to recenter window
     minpix = 50
@@ -241,3 +242,8 @@ if __name__ == "__main__":
     clip1 = VideoFileClip("project_video.mp4")
     yellow_clip = clip1.fl_image(pipeline) #NOTE: this function expects color images!!
     yellow_clip.write_videofile(video_output, audio=False)
+
+    # video_output = 'fix.mp4'
+    # clip1 = VideoFileClip("project_video.mp4").subclip(39, 40)
+    # yellow_clip = clip1.fl_image(pipeline) #NOTE: this function expects color images!!
+    # yellow_clip.write_videofile(video_output, audio=False)
