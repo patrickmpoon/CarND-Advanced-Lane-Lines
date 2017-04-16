@@ -10,7 +10,99 @@ matrix = calibration['mtx']
 distortion_coefficients = calibration['dist']
 
 
+def process_window(
+    binary_warped,
+    window,
+    window_height,
+    leftx_current,
+    rightx_current,
+    margin,
+    nonzeroy,
+    nonzerox,
+    left_lane_inds,
+    right_lane_inds,
+    minpix
+):
+    # Identify window boundaries in x and y (and right and left)
+    win_y_low = binary_warped.shape[0] - ((window + 1) * window_height)
+    win_y_high = binary_warped.shape[0] - (window * window_height)
+    win_xleft_low = leftx_current - margin
+    win_xleft_high = leftx_current + margin
+    win_xright_low = rightx_current - margin
+    win_xright_high = rightx_current + margin
+
+    # Identify the nonzero pixels in x and y within the window
+    good_left_inds = ((nonzeroy >= win_y_low) &
+                      (nonzeroy < win_y_high) &
+                      (nonzerox >= win_xleft_low) &
+                      (nonzerox < win_xleft_high)).nonzero()[0]
+    good_right_inds = ((nonzeroy >= win_y_low) &
+                       (nonzeroy < win_y_high) &
+                       (nonzerox >= win_xright_low) &
+                       (nonzerox < win_xright_high)).nonzero()[0]
+
+    # Append these indices to the lists
+    left_lane_inds.append(good_left_inds)
+    right_lane_inds.append(good_right_inds)
+
+    # If found > minpix pixels, recenter next window on their mean position
+    if len(good_left_inds) > minpix:
+        leftx_current = np.int(np.mean(nonzerox[good_left_inds]))
+    if len(good_right_inds) > minpix:
+        rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
+
+    return left_lane_inds, right_lane_inds, leftx_current, rightx_current
+
+
+def add_text_to_final_image(
+    image,
+    labels_with_pos,
+    color,
+    font=cv2.FONT_HERSHEY_SIMPLEX,
+    fontscale=1.25,
+    thickness=2,
+    lineType=cv2.LINE_AA,
+    drop_shadow_offset=3
+):
+    drop_shadow_color = (0, 0, 0)
+
+    for label in labels_with_pos:
+        text = label[0]
+        pos = label[1]
+        pos_offset = (pos[0] + drop_shadow_offset, pos[1] + drop_shadow_offset)
+
+        # Draw drop shadow
+        cv2.putText(
+            img=image,
+            text=text,
+            org=pos_offset,
+            fontFace=font,
+            fontScale=fontscale,
+            color=drop_shadow_color,
+            thickness=thickness,
+            lineType=lineType
+        )
+
+        # Draw main color
+        cv2.putText(
+            img=image,
+            text=text,
+            org=pos,
+            fontFace=font,
+            fontScale=fontscale,
+            color=color,
+            thickness=thickness,
+            lineType=lineType
+        )
+    return image
+
+
 def pipeline(image):
+    """Pipeline to manipulate an image to detect lane lines and illustrate the lane region
+    
+    :param numpy.ndarray image:  Image containing lanes to be detected
+    :return numpy.ndarray: Image with lane painted with curvature radius and distance-from-center labels
+    """
     undistorted = undistort_image(image, matrix, distortion_coefficients)
     _, combined_binary = get_color_threshold(undistorted)
 
@@ -27,8 +119,6 @@ def pipeline(image):
     midpoint = np.int(histogram.shape[0]/2)
     leftx_base = np.argmax(histogram[:midpoint])
     rightx_base = np.argmax(histogram[midpoint:]) + midpoint
-    print('midpoint = {}'.format(midpoint))
-    print('leftx_base = {}  rightx_base = {}'.format(leftx_base, rightx_base))
 
     # Choose the number of sliding windows
     nwindows = 9
@@ -57,33 +147,19 @@ def pipeline(image):
 
     # Step through the windows one by one
     for window in range(nwindows):
-        # Identify window boundaries in x and y (and right and left)
-        win_y_low = binary_warped.shape[0] - ((window + 1) * window_height)
-        win_y_high = binary_warped.shape[0] - (window * window_height)
-        win_xleft_low = leftx_current - margin
-        win_xleft_high = leftx_current + margin
-        win_xright_low = rightx_current - margin
-        win_xright_high = rightx_current + margin
-
-        # Identify the nonzero pixels in x and y within the window
-        good_left_inds = ((nonzeroy >= win_y_low) &
-                          (nonzeroy < win_y_high) &
-                          (nonzerox >= win_xleft_low) &
-                          (nonzerox < win_xleft_high)).nonzero()[0]
-        good_right_inds = ((nonzeroy >= win_y_low) &
-                           (nonzeroy < win_y_high) &
-                           (nonzerox >= win_xright_low) &
-                           (nonzerox < win_xright_high)).nonzero()[0]
-
-        # Append these indices to the lists
-        left_lane_inds.append(good_left_inds)
-        right_lane_inds.append(good_right_inds)
-
-        # If you found > minpix pixels, recenter next window on their mean position
-        if len(good_left_inds) > minpix:
-            leftx_current = np.int(np.mean(nonzerox[good_left_inds]))
-        if len(good_right_inds) > minpix:
-            rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
+        left_lane_inds, right_lane_inds, leftx_current, rightx_current = process_window(
+            binary_warped,
+            window,
+            window_height,
+            leftx_current,
+            rightx_current,
+            margin,
+            nonzeroy,
+            nonzerox,
+            left_lane_inds,
+            right_lane_inds,
+            minpix
+        )
 
     # Concatenate the arrays of indices
     left_lane_inds = np.concatenate(left_lane_inds)
@@ -105,12 +181,8 @@ def pipeline(image):
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
 
     # Define y-value where we want radius of curvature
-    # I'll choose the maximum y-value, corresponding to the bottom of the image
+    # Let's choose the maximum y-value, corresponding to the bottom of the image
     y_eval = np.max(ploty)
-    left_curverad = ((1 + (2*left_fit[0]*y_eval + left_fit[1])**2)**1.5) / np.absolute(2*left_fit[0])
-    right_curverad = ((1 + (2*right_fit[0]*y_eval + right_fit[1])**2)**1.5) / np.absolute(2*right_fit[0])
-    print(left_curverad, right_curverad)
-    # Example values: 1926.74 1908.48
 
     # Define conversions in x and y from pixels space to meters
     ym_per_pix = 30/720 # meters per pixel in y dimension
@@ -143,51 +215,17 @@ def pipeline(image):
     lane_off_center = (lane_center - (image.shape[1] / 2)) * xm_per_pix
     text_center_off = 'Vehicle is {:.4f} m {} of center'.format(abs(lane_off_center), 'left' if lane_off_center > 0 else 'right')
 
-    # Drop shadow
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    fontscale = 1.25
-    thickness = 2
-    cv2.putText(
-        undistorted,
-        text_curve_radius,
-        (53, 103),
-        font,
-        fontscale,
-        (0, 0, 0),
-        thickness,
-        cv2.LINE_AA
-    )
-    cv2.putText(
-        undistorted,
-        text_curve_radius,
-        (50, 100),
-        font,
-        fontscale,
-        (255, 255, 0),
-        thickness,
-        cv2.LINE_AA
-    )
+    # Draw labels
+    color = (255, 255, 0)
+    labels_with_pos = [
+        (text_curve_radius, (50, 100)),
+        (text_center_off, (50, 160))
+    ]
 
-    # Primary color
-    cv2.putText(
+    undistorted = add_text_to_final_image(
         undistorted,
-        text_center_off,
-        (53, 163),
-        font,
-        fontscale,
-        (0, 0, 0),
-        thickness,
-        cv2.LINE_AA
-    )
-    cv2.putText(
-        undistorted,
-        text_center_off,
-        (50, 160),
-        font,
-        fontscale,
-        (255, 255, 0),
-        thickness,
-        cv2.LINE_AA
+        labels_with_pos,
+        color
     )
 
     # Warp the blank back to original image space using inverse perspective matrix (Minv)
