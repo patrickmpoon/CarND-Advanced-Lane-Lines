@@ -135,6 +135,7 @@ def pipeline(image):
     leftx_current = leftx_base
     rightx_current = rightx_base
 
+
     # Set the width of the windows +/- margin
     margin = 100
 
@@ -211,7 +212,7 @@ def pipeline(image):
     avg_curve_radius = np.mean([left_curverad + right_curverad])
     text_curve_radius = 'Curvature Radius = {:.4f} (m)'.format(avg_curve_radius)
 
-    lane_center = (leftx_current + rightx_current) / 2
+    lane_center = (leftx_base + rightx_base) / 2
     lane_off_center = (lane_center - (image.shape[1] / 2)) * xm_per_pix
     text_center_off = 'Vehicle is {:.4f} m {} of center'.format(abs(lane_off_center), 'left' if lane_off_center > 0 else 'right')
 

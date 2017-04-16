@@ -1,5 +1,3 @@
-
-
 ## Project 5 Writeup: Advanced Lane Finding
 
 
@@ -19,6 +17,7 @@ The goals / steps of this project are the following:
 * Determine the curvature of the lane and vehicle position with respect to center.
 * Warp the detected lane boundaries back onto the original image.
 * Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
+
 
 ## Rubric Points
 ### Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/571/view) individually and describe how I addressed each point in my implementation.  
@@ -41,7 +40,6 @@ I start by preparing "object points", which represent the (x, y, z) coordinates 
 
 At this point, I used the resulting `objpoints` and `imgpoints` arrays to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I then applied this distortion correction to a test image using the `cv2.undistort()` function and obtained the following result: 
 
-
 ![png](examples/output_4_0.png)
 
 
@@ -52,8 +50,6 @@ At this point, I used the resulting `objpoints` and `imgpoints` arrays to comput
 To ensure that my calibration results would work on the driving images, I tested the results against the `signs_vehicles_xygrad.png` image from the "Combining Thresholds" lesson in the "Advanced Lane Finding" module of the Udacity curriculum.  The file can be found in the `./test_images/` directory.
 
 The image is quite distorted.  I loaded the calibration matrix and distortion coefficients, and fed them in the `cv2.undistort()` function along with the image in line 51 of the `calibrate_camera.py` file.  Here are the results:
-
-
 
 ![png](examples/output_6_0.png)
 
@@ -66,7 +62,9 @@ I wrote functions to generate a variety of threshold binaries, namely absolute S
 
 Using `cv2.cvtColor` function to obtain the HLS (Hue, Lightness, and Saturation) values for the image, I was able to extract the Lightness and Saturation channels and use them with the `cv2.Sobel` operator to calculate a binary that effectively detects the lanes in lines 79-107 in `thresholds.py`.  Please see the **Thresholded Gradient [Combined]** image below for the result:
 
+
 ![png](examples/output_9_0.png)
+
 
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
@@ -84,6 +82,8 @@ I used the `./test_images/straight_lines1.jpg` as my source file.  With the GIMP
 
 
 To confirm that my perspective transform succeeded, I printed the original image, undistorted it, drew lines between the region of interest `src` points, and finally warped the image to provide a "bird's eye" view, using the `dst` points:
+
+
 
 ![png](examples/output_11_0.png)
 
@@ -118,16 +118,19 @@ Using the second order polynomials above, I painted the region between the lanes
 
 ---
 
+
 ![png](examples/output_19_0.png)
+
 
 
 ### Pipeline (video)
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](https://youtu.be/W0xzcFRIw2g).  A copy of the movie file can be found at `./yellow_brick_road.mp4`.
+Here's a [link to my video result](https://youtu.be/K3Cu84ZH7SI).  A copy of the movie file can be found at `./yellow_brick_road.mp4`.
 
 ---
+
 
 
 ### Discussion
